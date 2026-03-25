@@ -62,6 +62,93 @@ When making design choices, Rubin asks:
 - **Photo grading** — Python/Sharp script to match iPhone photos to Kristof's warm analog style
 - **Website** — bukito-web Next.js site with Framer Motion animations
 
+### Website Tech Stack (`~/Documents/Software Projects/bukito-web/`)
+
+```
+Next.js 16.2 (App Router) + TypeScript + Tailwind CSS v4
+Framer Motion 12 — scroll-triggered animations, page transitions
+Lenis 1.3 — smooth scroll
+```
+
+**Project structure:**
+```
+src/app/
+  layout.tsx          — Root layout, SmoothScroll wrapper
+  page.tsx            — Composes all sections
+  globals.css         — Tailwind + Kisrre @font-face
+  components/
+    AnimatedSection   — Scroll-triggered fade/slide animations
+    IconMarquee       — Auto-scrolling icon strip
+    ParallaxImage     — Scroll-based parallax effect
+    SmoothScroll      — Lenis smooth scroll provider
+    VideoHero         — Background video with overlay
+  sections/
+    HeroSection       — Full-screen hero with video/photo + headline
+    AboutSection      — "Where The Jungle Meets The Sea"
+    MenuSection       — Menu highlights with photos
+    OfferingsSection  — Services/features grid
+    GallerySection    — Photo gallery with lightbox
+    AtmosphereSection — Mood/vibe showcase
+    MarqueeSection    — Scrolling icon/text strip
+    FooterSection     — Contact, social links, address
+```
+
+**Commands:**
+```bash
+npm run dev       # Start dev server (localhost:3000)
+npm run build     # Production build
+npm run start     # Serve production build
+```
+
+**Design rules for the website:**
+- ALL CAPS everywhere (Kisrre font rule)
+- Colors: Sunrust (#6D0000) on Coconut Sand (#F8F5EA), dark sections use Black Magic (#000000)
+- Photos from `~/bukito-brand-assets/photos/` — use Kristof's WOF photos only
+- Animations: subtle, scroll-triggered, never flashy. Think editorial magazine, not SaaS landing page.
+- Sections should breathe — generous padding (80px+), no cramming
+
+### Video Tech Stack (`~/Documents/Software Projects/bukito-video/`)
+
+```
+Remotion 4 — React-based programmatic video
+TypeScript
+```
+
+**Compositions:**
+```
+src/
+  BukitoReel.tsx    — 9:16 reel (1080x1920), 8s, Ken Burns + text
+  BukitoPost.tsx    — 1:1 post (1080x1080), 6s, photo + overlay
+  MarketingReel.tsx — Promo reel with multiple scenes
+  VibeReel.tsx      — Atmospheric/mood reel
+  Root.tsx          — Remotion entry point
+  components/
+    AnimatedText    — Fade-in text with spring animations
+    KenBurns        — Slow zoom/pan on photos
+```
+
+**Commands:**
+```bash
+npx remotion studio              # Preview in browser
+npx remotion render BukitoReel out/reel.mp4
+npx remotion render BukitoPost out/post.mp4
+```
+
+**AI video (Runway):**
+```bash
+npx tsx scripts/image-to-video.ts <PHOTO> [PROMPT] [DURATION] [RATIO]
+```
+
+### Photo Grading
+
+**LUT (manual editing):** `~/bukito-brand-assets/lut/BUKITO_GoldenStandard.cube`
+- Import in Lightroom, DaVinci Resolve, Final Cut Pro
+- Apply at 70-85% intensity, never 100%
+
+**Script (batch/pipeline):** `~/Documents/Software Projects/bukito-video/scripts/grade-photo.py`
+- Matches iPhone photos to Kristof's warm analog style
+- Warm temperature, lifted blacks, gentle S-curve, film grain
+
 ### Planned
 - **Seasonal menu cards** — Rotating specials, printed on textured stock
 - **Merch designs** — T-shirt layouts using existing brand assets
