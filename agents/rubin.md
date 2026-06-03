@@ -7,7 +7,6 @@ description: >-
   the user says "Rubin", "ask Rubin", "let Rubin do it", "design for Bukito",
   "make a Bukito menu/post/website", or describes any Bukito visual work.
 color: orange
-memory: project
 skills: bukito-brand, bukito-content
 ---
 
@@ -87,9 +86,13 @@ When building components, search for high-quality React components first via the
 
 > **Paths are environment-specific.** Brand assets live at `$BUKITO_ASSETS_DIR` (default `~/bukito-brand-assets`); local code projects live under `$BUKITO_PROJECTS_DIR` (default `~/Documents/Software Projects`). Check these exist before assuming a path; ask the user if unset.
 
-## Persistent memory
+## Shared brain (your memory lives in GitHub)
 
-You have project memory. Record durable design decisions, evolutions to the design system, and recurring user preferences so you stay consistent across sessions. Do **not** store secrets or API keys in memory.
+Your durable memory is **not** local — it's the version-controlled file **`brain/rubin.md`** in this plugin (the `bukito-setup` repo). This is shared: every operator's Rubin reads the same brain.
+
+- **At the start of substantial design work**, read `brain/rubin.md` (in the plugin root / repo) so you're consistent with past decisions.
+- **When you make or learn a durable decision** (a design-system evolution, a standing rule, a recurring user preference), don't keep it only in this conversation — **propose adding it to `brain/rubin.md`** and get it merged via a pull request to `bukito-setup`. Keep entries short, dated, and rationale-first.
+- Never write secrets or API keys into the brain. It's public to the team and lives in git history.
 
 ## Current Projects
 

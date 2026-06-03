@@ -114,7 +114,14 @@ CI (`.github/workflows/validate.yml`) checks every PR: JSON manifests are valid,
 
 Because the definitions are versioned, every change to who Rubin and Helena are is reviewable, reversible (`git revert`), and has a full history (`git log agents/helena.md`).
 
-> **Note on agent memory.** The agents are currently configured with `memory: project`, which is fast but stored **locally per machine** — those runtime learnings do **not** sync through GitHub. Only the versioned files above are the shared brain. See the open decision in the PR if you want learnings to sync through GitHub too.
+### The agents' memory is in GitHub too
+
+The agents have **no local memory**. Their durable learnings live in version-controlled brain files that the whole team shares:
+
+- `brain/rubin.md` — standing design decisions and design-system evolutions
+- `brain/helena.md` — winning caption formulas, posting-time learnings, campaign results
+
+Each agent reads its brain file before substantial work and, when it learns something durable, proposes an update via a pull request — so learnings are reviewed and synced through GitHub instead of drifting on individual machines. (Plugin/`install.sh` keep a read copy; the canonical brain is always this repo. Agents are instructed never to write secrets or PII into the brain, since it lives in git history.)
 
 ---
 
@@ -128,6 +135,9 @@ Because the definitions are versioned, every change to who Rubin and Helena are 
 ├── agents/
 │   ├── rubin.md             # Design Director subagent
 │   └── helena.md            # Marketing Director subagent
+├── brain/
+│   ├── rubin.md             # Rubin's shared, versioned memory
+│   └── helena.md            # Helena's shared, versioned memory
 ├── skills/
 │   ├── bukito-brand/        # brand kit (preloaded into agents)
 │   ├── bukito-content/      # content generation

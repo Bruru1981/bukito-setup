@@ -67,6 +67,20 @@ for agent_file in "$SRC_DIR"/agents/*.md; do
   echo "  ✓ agent: $(basename "${agent_file%.md}")"
 done
 
+# ---- 3b. Install shared brain (read cache) ---------------------------------
+# Canonical brain lives in the bukito-setup git repo; updates go via PR.
+# This copy gives the agents read access on a manual (non-plugin) install.
+echo ""
+echo "→ Installing shared brain..."
+BRAIN_DEST="$CLAUDE_DIR/bukito/brain"
+mkdir -p "$BRAIN_DEST"
+for brain_file in "$SRC_DIR"/brain/*.md; do
+  [ -f "$brain_file" ] || continue
+  cp "$brain_file" "$BRAIN_DEST/"
+  echo "  ✓ brain: $(basename "$brain_file")"
+done
+echo "    (canonical brain is the bukito-setup repo — update it via PR)"
+
 # ---- 4. Install fonts (cross-platform) -------------------------------------
 echo ""
 echo "→ Installing Bukito fonts..."
