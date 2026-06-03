@@ -1,11 +1,13 @@
 ---
 name: bukito-onboarding
-description: "First-run onboarding for Bukito brand & marketing agents. Connects to Supabase, fetches brand data, configures tools, and introduces Rubin & Helena. Triggers on: bukito setup, start bukito, let's build, let's start building, configure bukito, init bukito."
+description: "First-run onboarding for the Bukito brand & marketing studio. Verifies brand assets and MCP servers, configures tools, and introduces the Rubin & Helena agents. Triggers on: bukito setup, start bukito, let's build, let's start building, configure bukito, init bukito."
 ---
 
 # Bukito Onboarding — First Run Setup
 
-When this skill triggers, run the following setup sequence:
+When this skill triggers, run the following setup sequence.
+
+> **Architecture note.** Rubin (Design Director) and Helena (Marketing Director) are **subagents** (`agents/rubin.md`, `agents/helena.md`) — Claude delegates to them and they each run in their own context. The brand/content/UGC capabilities are **skills**. MCP servers are declared in `.mcp.json`. Everything ships as the `bukito` plugin.
 
 ## Step 1: Welcome
 
@@ -36,29 +38,43 @@ Ask: "Which brand are we working on?"
 
 If the answer is **Bukito** (or similar), proceed. Otherwise, explain these agents are Bukito-specific.
 
-## Step 3: Connect to Supabase
+## Step 3: Check Environment Variables
 
-The Bukito media project:
-- **Project ID**: `glmgwaywptqlzudoiwot`
-- **Region**: eu-north-1
-- **Bucket**: `media`
-- **Tables**: `content_analytics`, `content_calendar`, `media`, `media_categories`
+These configure paths and credentials. Defaults are used when unset.
 
-Verify connection by running:
-```
-List tables for project glmgwaywptqlzudoiwot
-```
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `BUKITO_ASSETS_DIR` | Brand assets (logos, fonts, photos, LUT) | `~/bukito-brand-assets` |
+| `BUKITO_PROJECTS_DIR` | Local code projects (web, video, postiz) | `~/Documents/Software Projects` |
+| `BUKITO_SUPABASE_PROJECT_REF` | Supabase project ref | `glmgwaywptqlzudoiwot` |
+| `SUPABASE_ACCESS_TOKEN` | Supabase MCP auth | _(required for analytics)_ |
+| `TWENTYFIRST_API_KEY` | Magic MCP (21st.dev) | _(optional)_ |
+| `RUNWAY_API_KEY` | AI video generation | _(optional)_ |
+| `POSTIZ_API_KEY` | Auto-posting | _(optional)_ |
 
-If it fails, check if Supabase MCP is configured in the user's settings.
+Report which are set vs. using defaults. Never print secret values.
 
-## Step 4: Verify Brand Assets
+## Step 4: Verify MCP Servers
 
-Check that the brand assets repo exists:
+The plugin declares MCP servers in `.mcp.json` (Supabase, Magic). Confirm they connected:
+
+| Server | Check | Required? |
+|--------|-------|-----------|
+| Supabase | `list_projects` (or list tables for the project ref) | Yes — analytics & media |
+| Magic (21st.dev) | component-builder tool available | Nice to have |
+| Paper | `get_basic_info` (configure manually — see README) | Nice to have |
+
+If Supabase fails, the user likely needs `SUPABASE_ACCESS_TOKEN` set, then approve the project-scoped `.mcp.json` server.
+
+## Step 5: Verify Brand Assets
+
 ```bash
-ls ~/bukito-brand-assets/logos/ ~/bukito-brand-assets/fonts/ ~/bukito-brand-assets/photos/
+ls "${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"/logos/ \
+   "${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"/fonts/ \
+   "${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"/photos/
 ```
 
-If missing, tell the user to run `install.sh` first.
+If missing, tell the user to clone the brand-assets repo (see README) or run `install.sh`.
 
 Report asset count:
 - Logos (3): SnakeBread, SnakeCoffee, SnakePalm
@@ -67,7 +83,7 @@ Report asset count:
 - Icons: count .png files in icons/
 - Wordmarks: count .png files in wordmarks/
 
-## Step 5: Ask for Paper Link
+## Step 6: Ask for Paper Link
 
 Say: "Do you have Paper open? Share the file URL so Rubin can design directly on your canvas."
 
@@ -78,28 +94,10 @@ If they share a URL like `https://app.paper.design/file/XXXXX`:
 If Paper isn't available:
 - Say: "No worries — Rubin can still generate HTML templates and Remotion videos. Paper just gives him a proper design canvas."
 
-## Step 6: Check Other Tools
+## Step 7: Confirm Capabilities Are Loaded
 
-Verify these are available (silently, don't bother the user):
-
-| Tool | Check | Required? |
-|------|-------|-----------|
-| Supabase MCP | `list_projects` | Yes |
-| Paper MCP | `get_basic_info` | Nice to have |
-| Remotion | `~/Documents/Software Projects/bukito-video/` exists | Nice to have |
-| Runway API | `~/.claude/api-keys.conf` has RUNWAY key | Nice to have |
-| Postiz | `~/Documents/Software Projects/bukito-postiz/` exists | Nice to have |
-
-Report what's connected and what's missing.
-
-## Step 7: Load Skills
-
-Explicitly load:
-1. `bukito-brand` — Always first (brand enforcement)
-2. `rubin` — Design Director
-3. `helena` — Marketing Director
-4. `bukito-content` — Content generation templates
-5. `bukito-ugc` — UGC curation (optional)
+- **Skills**: `bukito-brand`, `bukito-content`, `bukito-ugc` (auto-trigger on relevant requests; `bukito-brand` is preloaded into both agents).
+- **Agents**: `rubin` and `helena` are available for delegation — no manual loading needed. Claude routes design tasks to Rubin and marketing tasks to Helena automatically.
 
 ## Step 8: Ready
 
@@ -110,11 +108,10 @@ Say:
 │  ✓ ALL SYSTEMS GO                        │
 │                                          │
 │  Connected:                              │
-│    ✓ Supabase (89 brand assets)          │
+│    [✓/✗] Supabase (brand assets + data)  │
 │    ✓ Brand kit (Kisrre + colors + logos)  │
 │    [✓/✗] Paper (design canvas)           │
-│    [✓/✗] Remotion (video)                │
-│    [✓/✗] Runway (AI video)               │
+│    [✓/✗] Magic / Remotion / Runway       │
 │    [✓/✗] Postiz (auto-posting)           │
 │                                          │
 │  Say:                                    │
@@ -129,7 +126,7 @@ Say:
 
 ## Important Notes
 
-- Rubin and Helena are SKILLS with personality, not separate chat sessions. When invoked, Claude adopts their voice and expertise.
-- Brand enforcement is automatic — any Bukito design work loads the brand skill.
-- Photos are at `~/bukito-brand-assets/photos/` and Supabase Storage.
-- The Golden Standard LUT is at `~/bukito-brand-assets/lut/BUKITO_GoldenStandard.cube` for Lightroom/Resolve.
+- **Rubin and Helena are subagents** — each runs in its own context with persistent project memory. They cannot invoke each other directly; for collaborative (public-facing) work, each hands the task back to the main session so the other can be brought in. Brand enforcement is automatic — `bukito-brand` is preloaded into both.
+- Photos are at `$BUKITO_ASSETS_DIR/photos/` and in Supabase Storage.
+- The Golden Standard LUT is at `$BUKITO_ASSETS_DIR/lut/BUKITO_GoldenStandard.cube` for Lightroom/Resolve.
+- Never print or store secret values (API keys, tokens) — use environment variables.
