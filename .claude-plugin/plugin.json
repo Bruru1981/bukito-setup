@@ -1,0 +1,18 @@
+{
+  "name": "bukito",
+  "displayName": "Bukito — Brand & Marketing Studio",
+  "version": "1.0.0",
+  "description": "Bukito brand & marketing agent suite for the Bukito restaurant in Kertasari, Sumbawa. Ships Rubin (Design Director) and Helena (Marketing Director) as subagents, plus brand, content, UGC and onboarding skills.",
+  "author": {
+    "name": "Bruru1981"
+  },
+  "homepage": "https://github.com/Bruru1981/bukito-setup",
+  "repository": "https://github.com/Bruru1981/bukito-setup",
+  "keywords": [
+    "brand",
+    "marketing",
+    "design",
+    "social-media",
+    "bukito"
+  ]
+}

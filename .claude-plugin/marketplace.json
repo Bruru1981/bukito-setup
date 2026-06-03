@@ -1,0 +1,14 @@
+{
+  "name": "bukito-studio",
+  "owner": {
+    "name": "Bruru1981"
+  },
+  "description": "Bukito brand & marketing studio — design and marketing agents plus brand skills.",
+  "plugins": [
+    {
+      "name": "bukito",
+      "source": "./",
+      "description": "Rubin (Design Director) & Helena (Marketing Director) subagents plus Bukito brand, content, UGC and onboarding skills."
+    }
+  ]
+}

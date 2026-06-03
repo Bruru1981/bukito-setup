@@ -1,12 +1,22 @@
 #!/bin/bash
 # ============================================
-# BUKITO BRAND & MARKETING — Claude Code Setup
+# BUKITO BRAND & MARKETING — Manual Setup (fallback)
 # ============================================
-# Run this script, then start Claude Code.
-# Say: "Let's start building the shit out of this"
+# RECOMMENDED: install as a Claude Code plugin instead —
+#   /plugin marketplace add Bruru1981/bukito-setup
+#   /plugin install bukito@bukito-studio
+#
+# Use this script only if you can't use plugins. It copies the
+# skills and agents into ~/.claude and sets up brand assets/fonts.
 # ============================================
 
-set -e
+set -euo pipefail
+
+# ---- Config (override via environment) -------------------------------------
+BUKITO_ASSETS_DIR="${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"
+BRAND_ASSETS_REPO="${BUKITO_BRAND_ASSETS_REPO:-https://github.com/Bruru1981/bukito-brand-assets.git}"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo ""
 echo "  ┌──────────────────────────────────────┐"
@@ -14,70 +24,100 @@ echo "  │  BUKITO — PARADISE WITH FANGS        │"
 echo "  │  Brand & Marketing Agent Setup        │"
 echo "  └──────────────────────────────────────┘"
 echo ""
+echo "  Tip: prefer '/plugin install bukito@bukito-studio' — see README."
+echo ""
 
-# 1. Clone brand assets
-echo "→ Cloning brand assets..."
-if [ ! -d "$HOME/bukito-brand-assets" ]; then
-  git clone https://github.com/Bruru1981/bukito-brand-assets.git "$HOME/bukito-brand-assets"
-  echo "  ✓ Brand assets cloned"
+# ---- 1. Clone/update brand assets (optional, may be private) ---------------
+echo "→ Brand assets..."
+if [ ! -d "$BUKITO_ASSETS_DIR" ]; then
+  if git clone "$BRAND_ASSETS_REPO" "$BUKITO_ASSETS_DIR" 2>/dev/null; then
+    echo "  ✓ Brand assets cloned to $BUKITO_ASSETS_DIR"
+  else
+    echo "  ⚠ Could not clone $BRAND_ASSETS_REPO (private or unreachable)."
+    echo "    Skills will still install. Set up assets manually at:"
+    echo "    $BUKITO_ASSETS_DIR   (or set BUKITO_ASSETS_DIR / BUKITO_BRAND_ASSETS_REPO)"
+  fi
 else
-  cd "$HOME/bukito-brand-assets" && git pull && cd -
-  echo "  ✓ Brand assets updated"
+  git -C "$BUKITO_ASSETS_DIR" pull --ff-only 2>/dev/null \
+    && echo "  ✓ Brand assets updated" \
+    || echo "  ⚠ Could not update assets at $BUKITO_ASSETS_DIR (skipping)."
 fi
 
-# 2. Install skills
+# ---- 2. Install skills ------------------------------------------------------
 echo ""
 echo "→ Installing skills..."
-SKILLS_DIR="$HOME/.claude/skills"
-mkdir -p "$SKILLS_DIR"
-
-# Copy skills from the setup package
-for skill in rubin helena bukito-brand bukito-content bukito-ugc; do
-  if [ -d "$(dirname "$0")/skills/$skill" ]; then
-    mkdir -p "$SKILLS_DIR/$skill"
-    cp "$(dirname "$0")/skills/$skill/SKILL.md" "$SKILLS_DIR/$skill/SKILL.md"
-    echo "  ✓ $skill"
-  fi
+SKILLS_DEST="$CLAUDE_DIR/skills"
+mkdir -p "$SKILLS_DEST"
+for skill_dir in "$SRC_DIR"/skills/*/; do
+  [ -d "$skill_dir" ] || continue
+  name="$(basename "$skill_dir")"
+  mkdir -p "$SKILLS_DEST/$name"
+  cp "$skill_dir/SKILL.md" "$SKILLS_DEST/$name/SKILL.md"
+  echo "  ✓ skill: $name"
 done
 
-# 3. Symlink brand skill from repo (source of truth)
-if [ -d "$HOME/bukito-brand-assets/skills/bukito-brand" ]; then
-  rm -rf "$SKILLS_DIR/bukito-brand"
-  ln -sf "$HOME/bukito-brand-assets/skills/bukito-brand" "$SKILLS_DIR/bukito-brand"
-  echo "  ✓ bukito-brand symlinked to repo"
-fi
-
-# 4. Create project CLAUDE.md
+# ---- 3. Install agents (Rubin & Helena) ------------------------------------
 echo ""
-echo "→ Setting up project context..."
-mkdir -p "$HOME/.claude/projects"
+echo "→ Installing agents..."
+AGENTS_DEST="$CLAUDE_DIR/agents"
+mkdir -p "$AGENTS_DEST"
+for agent_file in "$SRC_DIR"/agents/*.md; do
+  [ -f "$agent_file" ] || continue
+  cp "$agent_file" "$AGENTS_DEST/"
+  echo "  ✓ agent: $(basename "${agent_file%.md}")"
+done
 
-# 5. Install fonts
+# ---- 3b. Install shared brain (read cache) ---------------------------------
+# Canonical brain lives in the bukito-setup git repo; updates go via PR.
+# This copy gives the agents read access on a manual (non-plugin) install.
+echo ""
+echo "→ Installing shared brain..."
+BRAIN_DEST="$CLAUDE_DIR/bukito/brain"
+mkdir -p "$BRAIN_DEST"
+for brain_file in "$SRC_DIR"/brain/*.md; do
+  [ -f "$brain_file" ] || continue
+  cp "$brain_file" "$BRAIN_DEST/"
+  echo "  ✓ brain: $(basename "$brain_file")"
+done
+echo "    (canonical brain is the bukito-setup repo — update it via PR)"
+
+# ---- 4. Install fonts (cross-platform) -------------------------------------
 echo ""
 echo "→ Installing Bukito fonts..."
-FONT_DIR="$HOME/Library/Fonts"
-for font in "$HOME/bukito-brand-assets/fonts/"*.otf; do
-  if [ -f "$font" ]; then
-    cp "$font" "$FONT_DIR/" 2>/dev/null || true
-  fi
-done
-echo "  ✓ Fonts installed (Kisrre, Kisrre-Rounded, UDC Sign Painter)"
+case "$(uname -s)" in
+  Darwin) FONT_DIR="$HOME/Library/Fonts" ;;
+  Linux)  FONT_DIR="$HOME/.local/share/fonts" ;;
+  *)      FONT_DIR="" ;;
+esac
 
-# 6. Setup complete
+if [ -n "$FONT_DIR" ] && [ -d "$BUKITO_ASSETS_DIR/fonts" ]; then
+  mkdir -p "$FONT_DIR"
+  installed=0
+  for font in "$BUKITO_ASSETS_DIR"/fonts/*.otf; do
+    [ -f "$font" ] || continue
+    cp "$font" "$FONT_DIR/" 2>/dev/null && installed=$((installed + 1))
+  done
+  [ "$(uname -s)" = "Linux" ] && command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$FONT_DIR" >/dev/null 2>&1 || true
+  echo "  ✓ $installed font(s) installed to $FONT_DIR"
+else
+  echo "  ⚠ Skipped (no font dir for this OS, or assets not present)."
+fi
+
+# ---- 5. Done ----------------------------------------------------------------
 echo ""
 echo "  ┌──────────────────────────────────────┐"
 echo "  │  ✓ SETUP COMPLETE                    │"
 echo "  │                                      │"
-echo "  │  Skills installed:                   │"
+echo "  │  Agents:                             │"
 echo "  │    🎨 Rubin  — Design Director       │"
 echo "  │    📱 Helena — Marketing Director    │"
-echo "  │    📸 bukito-ugc — UGC Curation      │"
-echo "  │    🎯 bukito-brand — Brand Kit       │"
-echo "  │    📝 bukito-content — Content Gen   │"
+echo "  │  Skills:                             │"
+echo "  │    🎯 bukito-brand   📝 bukito-content│"
+echo "  │    📸 bukito-ugc     🚀 onboarding   │"
 echo "  │                                      │"
-echo "  │  Next steps:                         │"
+echo "  │  Next:                               │"
 echo "  │    1. Open Claude Code               │"
-echo "  │    2. Say: 'bukito setup'            │"
-echo "  │    3. Rubin & Helena take over       │"
+echo "  │    2. Set required env vars (README) │"
+echo "  │    3. Say: 'bukito setup'            │"
 echo "  └──────────────────────────────────────┘"
 echo ""

@@ -17,7 +17,7 @@ Generate on-brand social media content using the full tool pipeline. Load `bukit
 
 ## Photo Library
 
-Local: `~/bukito-brand-assets/photos/`. Supabase: project `glmgwaywptqlzudoiwot`, bucket `media`, path `Bukito brand book/photos/`.
+Local: `$BUKITO_ASSETS_DIR/photos/` (default `~/bukito-brand-assets/photos/`). Supabase: project `$BUKITO_SUPABASE_PROJECT_REF` (default `glmgwaywptqlzudoiwot`), bucket `media`, path `Bukito brand book/photos/`.
 
 | File | Content | Best for |
 |------|---------|----------|
@@ -32,7 +32,7 @@ Local: `~/bukito-brand-assets/photos/`. Supabase: project `glmgwaywptqlzudoiwot`
 | bukito-barista.webp | Barista | Coffee, craft |
 | bukito-exterior.webp | Restaurant exterior | Establishing |
 
-Sync missing photos: `curl -sL "https://glmgwaywptqlzudoiwot.supabase.co/storage/v1/object/public/media/Bukito%20brand%20book/photos/{FILE}" -o ~/bukito-brand-assets/photos/{FILE}`
+Sync missing photos: `curl -sL "https://${BUKITO_SUPABASE_PROJECT_REF:-glmgwaywptqlzudoiwot}.supabase.co/storage/v1/object/public/media/Bukito%20brand%20book/photos/{FILE}" -o "$BUKITO_ASSETS_DIR/photos/{FILE}"`
 
 ## Content Templates
 
@@ -89,7 +89,7 @@ Footer: "BUKITO" + "KERTASARI, SUMBAWA"
 ### AI Video Clip (Runway)
 
 ```bash
-cd ~/Documents/Software\ Projects/bukito-video
+cd "$BUKITO_PROJECTS_DIR/bukito-video"
 npx tsx scripts/image-to-video.ts <PHOTO> [PROMPT] [DURATION] [RATIO]
 ```
 
@@ -103,7 +103,7 @@ Motion prompt tips:
 
 ### Composed Video (Remotion)
 
-Edit `src/BukitoReel.tsx` or `src/BukitoPost.tsx` at `~/Documents/Software Projects/bukito-video/`.
+Edit `src/BukitoReel.tsx` or `src/BukitoPost.tsx` at `$BUKITO_PROJECTS_DIR/bukito-video/`.
 
 Swap photos via `staticFile('/photos/FILENAME')`. Change text in AnimatedText components. Render:
 

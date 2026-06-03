@@ -1,0 +1,78 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON manifests
+        run: |
+          set -e
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .mcp.json; do
+            echo "Checking $f"
+            python3 -c "import json,sys; json.load(open('$f'))"
+          done
+          echo "✓ All JSON manifests are valid"
+
+      - name: Check install.sh syntax
+        run: |
+          bash -n install.sh
+          echo "✓ install.sh parses"
+
+      - name: Lint install.sh (shellcheck)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          shellcheck --severity=error install.sh
+          echo "✓ shellcheck passed (errors)"
+
+      - name: Validate skills & agents frontmatter
+        run: |
+          python3 - <<'PY'
+          import glob, sys, re
+
+          errors = []
+
+          def frontmatter(path):
+              text = open(path, encoding="utf-8").read()
+              m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+              return m.group(1) if m else None
+
+          # Skills: each skills/*/SKILL.md needs name + description
+          skills = glob.glob("skills/*/SKILL.md")
+          if not skills:
+              errors.append("No skills found under skills/*/SKILL.md")
+          for p in skills:
+              fm = frontmatter(p)
+              if fm is None:
+                  errors.append(f"{p}: missing YAML frontmatter")
+                  continue
+              for field in ("name", "description"):
+                  if not re.search(rf"^{field}\s*:", fm, re.M):
+                      errors.append(f"{p}: missing '{field}' in frontmatter")
+
+          # Agents: each agents/*.md needs name + description
+          agents = glob.glob("agents/*.md")
+          if not agents:
+              errors.append("No agents found under agents/*.md")
+          for p in agents:
+              fm = frontmatter(p)
+              if fm is None:
+                  errors.append(f"{p}: missing YAML frontmatter")
+                  continue
+              for field in ("name", "description"):
+                  if not re.search(rf"^{field}\s*:", fm, re.M):
+                      errors.append(f"{p}: missing '{field}' in frontmatter")
+
+          if errors:
+              print("✗ Validation failed:")
+              for e in errors:
+                  print("  -", e)
+              sys.exit(1)
+          print(f"✓ {len(skills)} skill(s) and {len(agents)} agent(s) have valid frontmatter")
+          PY

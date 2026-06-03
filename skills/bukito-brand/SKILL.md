@@ -36,15 +36,15 @@ Mystical, edgy, warm. NOT hyper-modern. Think surf culture meets Belgian/local f
 ## Typography
 
 ### Primary Font: Kisrre Regular
-- **File**: `fonts/Kisrre.otf` (in this repo)
+- **File**: `$BUKITO_ASSETS_DIR/fonts/Kisrre.otf`
 - **Kerning**: Optical
 - **Tracking**: -60 (tight — this is essential to the brand)
 - **Case**: ALL CAPS always — headlines AND body
 - Kisrre Regular is the DEFAULT for everything.
 
 ### Secondary Fonts (use sparingly, with approval)
-- **Kisrre-Rounded** (`fonts/Kisrre-Rounded.otf`) — Softer variant for friendlier contexts. Same ALL CAPS rule.
-- **UDC Sign Painter Light** (`fonts/UDC Sign Painter-Light.otf`) — Hand-painted style for event posters, chalkboard menus. Mixed case OK.
+- **Kisrre-Rounded** (`$BUKITO_ASSETS_DIR/fonts/Kisrre-Rounded.otf`) — Softer variant for friendlier contexts. Same ALL CAPS rule.
+- **UDC Sign Painter Light** (`$BUKITO_ASSETS_DIR/fonts/UDC Sign Painter-Light.otf`) — Hand-painted style for event posters, chalkboard menus. Mixed case OK.
 
 ### Hierarchy (suggested sizes)
 - Hero/display: 48–72px
@@ -118,6 +118,6 @@ HTML templates in `templates/` for:
 - A4 menu
 
 ## Asset Locations
-- **This repo**: logos, wordmarks, icons, fonts, stamps, patterns, merch, colors.json, templates
+- **Brand assets repo** (`$BUKITO_ASSETS_DIR`, default `~/bukito-brand-assets`): logos, wordmarks, icons, fonts, stamps, patterns, merch, colors.json, templates, LUT
 - **Supabase Storage** (bukito-media): photos, videos, large media
 - **Google Drive**: source files (AI, PSD, brandbook PDF)
