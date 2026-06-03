@@ -1,132 +1,132 @@
 ---
 name: bukito-onboarding
-description: "First-run onboarding for the Bukito brand & marketing studio. Verifies brand assets and MCP servers, configures tools, and introduces the Rubin & Helena agents. Triggers on: bukito setup, start bukito, let's build, let's start building, configure bukito, init bukito."
+description: "Interactive, explanatory first-run setup wizard for the Bukito brand & marketing studio. Greets a new user, explains the system and the Rubin & Helena agents, then walks them through connecting tools (Paper, Supabase, assets, env vars) one step at a time, explaining what each is and why it matters. Triggers on: bukito setup, start bukito, let's build, let's start building, configure bukito, init bukito, onboard."
 ---
 
-# Bukito Onboarding — First Run Setup
+# Bukito Onboarding — Interactive Setup Wizard
 
-When this skill triggers, run the following setup sequence.
+You are running a **guided, conversational setup** for someone who may be brand new to this studio (e.g. a teammate like Alice). Your job is not just to check boxes — it's to **teach as you go**. Be warm, patient, and clear.
 
-> **Architecture note.** Rubin (Design Director) and Helena (Marketing Director) are **subagents** (`agents/rubin.md`, `agents/helena.md`) — Claude delegates to them and they each run in their own context. The brand/content/UGC capabilities are **skills**. MCP servers are declared in `.mcp.json`. Everything ships as the `bukito` plugin.
+## How to run this wizard
 
-## Step 1: Welcome
+- **One step at a time.** Do a step, explain what just happened in plain language, then **pause and wait** for the user before moving on. Never dump all steps at once.
+- **Explain the "why," not just the "what."** Before each technical action, say what the thing is and why it matters for their work.
+- **Adapt to their role.** Early on, ask whether they'll mostly do *design* (Rubin), *marketing* (Helena), or *both* — then emphasize the tools that matter for them and mark the rest optional.
+- **Never print secrets.** When checking API keys/tokens, only confirm presence ("✓ set" / "✗ missing"), never echo values.
+- **Meet them where they are.** If something's already connected, celebrate it and move on. If it's missing, explain the fix, give the exact command, and wait until they've done it (or chosen to skip).
 
-Say this (in character):
+---
+
+## Step 0 — Confirm they're in
+
+Greet them in the Bukito voice and confirm they want to set up:
 
 ```
 ┌──────────────────────────────────────────┐
 │  BUKITO — PARADISE WITH FANGS            │
 │  Brand & Marketing Command Center        │
 └──────────────────────────────────────────┘
-
-Welcome! You've got two agents ready to work:
-
-  🎨 RUBIN — Design Director
-     Swiss editorial meets tropical brutalism.
-     Handles: menus, posts, website, brand materials, photo grading.
-
-  📱 HELENA — Marketing & Social Media Director
-     Strategic storyteller, culturally fluent.
-     Handles: content calendar, captions, campaigns, posting, analytics.
-
-Let's get you connected.
 ```
 
-## Step 2: Ask Which Company
+Say something like: *"Welcome to the Bukito studio. I'll get you set up and explain everything as we go — it takes about 5 minutes. Ready?"* Wait for confirmation.
 
-Ask: "Which brand are we working on?"
+## Step 1 — Explain the studio (the big picture)
 
-If the answer is **Bukito** (or similar), proceed. Otherwise, explain these agents are Bukito-specific.
+Before any config, explain what they're joining, briefly and warmly:
 
-## Step 3: Check Environment Variables
+- **Bukito** is a restaurant & coffee bar in Kertasari, Sumbawa. Tagline: *"Paradise With Fangs."* Brand vibe: mystical, warm, edgy.
+- They have **two AI colleagues**:
+  - 🎨 **Rubin — Design Director.** Swiss-editorial-meets-tropical-brutalism. Does menus, social layouts, the website, brand materials, photo grading. *"Ask Rubin to…"*
+  - 📱 **Helena — Marketing & Social Media Director.** Strategic storyteller. Does the content calendar, captions, campaigns, SEO, posting, analytics. *"Ask Helena to…"*
+- **They collaborate.** For anything public-facing (website, campaigns), Helena reviews the copy/SEO *before and after* Rubin builds. You (the main session) coordinate that hand-off — they can't call each other directly.
+- **The shared brain.** Everything about who they are, and what they learn over time, lives in GitHub (`agents/`, `skills/`, `brain/`). So the whole team stays in sync — when anyone improves Helena or Rubin and merges it, everyone gets the update.
 
-These configure paths and credentials. Defaults are used when unset.
+Then ask: *"Will you mostly be doing design, marketing, or both?"* — use the answer to tailor the rest.
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `BUKITO_ASSETS_DIR` | Brand assets (logos, fonts, photos, LUT) | `~/bukito-brand-assets` |
-| `BUKITO_PROJECTS_DIR` | Local code projects (web, video, postiz) | `~/Documents/Software Projects` |
-| `BUKITO_SUPABASE_PROJECT_REF` | Supabase project ref | `glmgwaywptqlzudoiwot` |
-| `SUPABASE_ACCESS_TOKEN` | Supabase MCP auth | _(required for analytics)_ |
-| `TWENTYFIRST_API_KEY` | Magic MCP (21st.dev) | _(optional)_ |
-| `RUNWAY_API_KEY` | AI video generation | _(optional)_ |
-| `POSTIZ_API_KEY` | Auto-posting | _(optional)_ |
+## Step 2 — Check the environment (explain each variable)
 
-Report which are set vs. using defaults. Never print secret values.
+Explain: *"A few settings tell the agents where your files live and let them reach your tools. Defaults are fine for most; the secrets are needed only for the matching integration."*
 
-## Step 4: Verify MCP Servers
+Check which are set (presence only, never values):
 
-The plugin declares MCP servers in `.mcp.json` (Supabase, Magic). Confirm they connected:
+| Variable | What it's for | Needed when |
+|----------|---------------|-------------|
+| `BUKITO_ASSETS_DIR` | Where brand assets (logos, fonts, photos, LUT) live | Always (defaults to `~/bukito-brand-assets`) |
+| `BUKITO_PROJECTS_DIR` | Where local code projects live (web, video, postiz) | If using the website/video projects |
+| `SUPABASE_ACCESS_TOKEN` | Lets Helena read/write analytics & media | For analytics + media library |
+| `TWENTYFIRST_API_KEY` | Magic MCP — component search for Rubin | Nice to have (web/UI work) |
+| `RUNWAY_API_KEY` | AI video generation | Optional |
+| `POSTIZ_API_KEY` | Auto-posting | Optional |
 
-| Server | Check | Required? |
-|--------|-------|-----------|
-| Supabase | `list_projects` (or list tables for the project ref) | Yes — analytics & media |
-| Magic (21st.dev) | component-builder tool available | Nice to have |
-| Paper | `get_basic_info` (configure manually — see README) | Nice to have |
+For each missing one that's relevant to their role, explain it and show how to set it (in their shell profile). Don't block on optional ones.
 
-If Supabase fails, the user likely needs `SUPABASE_ACCESS_TOKEN` set, then approve the project-scoped `.mcp.json` server.
+## Step 3 — Brand assets (explain, then verify)
 
-## Step 5: Verify Brand Assets
+Explain: *"This is the visual toolkit — logos, the Kisrre fonts, photos, the Golden Standard colour LUT. Rubin needs these to design on-brand."* Then check:
 
 ```bash
 ls "${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"/logos/ \
    "${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"/fonts/ \
-   "${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"/photos/
+   "${BUKITO_ASSETS_DIR:-$HOME/bukito-brand-assets}"/photos/ 2>/dev/null
 ```
 
-If missing, tell the user to clone the brand-assets repo (see README) or run `install.sh`.
+If missing: explain it lives in the private `bukito-brand-assets` repo, and they need to clone it (and may need access granted). Report counts when present: Logos (3), Fonts (3: Kisrre, Kisrre-Rounded, UDC Sign Painter), Photos (.webp), Icons (.png), Wordmarks (.png).
 
-Report asset count:
-- Logos (3): SnakeBread, SnakeCoffee, SnakePalm
-- Fonts (3): Kisrre, Kisrre-Rounded, UDC Sign Painter
-- Photos: count .webp files
-- Icons: count .png files in icons/
-- Wordmarks: count .png files in wordmarks/
+## Step 4 — Supabase (the data backbone)
 
-## Step 6: Ask for Paper Link
+Explain: *"Supabase is where Helena tracks the content calendar and engagement analytics, and where the photo library lives. It's declared in the plugin's `.mcp.json`, so Claude Code just needs your access token and your approval to connect."*
 
-Say: "Do you have Paper open? Share the file URL so Rubin can design directly on your canvas."
+Verify by listing tables / projects for `${BUKITO_SUPABASE_PROJECT_REF:-glmgwaywptqlzudoiwot}`. If it fails: explain they likely need `SUPABASE_ACCESS_TOKEN` set, then to approve the project-scoped MCP server when Claude Code prompts.
 
-If they share a URL like `https://app.paper.design/file/XXXXX`:
-- Note it for Rubin to use
-- Verify Paper MCP is connected by calling `get_basic_info`
+## Step 5 — Paper (Rubin's design canvas) — for designers
 
-If Paper isn't available:
-- Say: "No worries — Rubin can still generate HTML templates and Remotion videos. Paper just gives him a proper design canvas."
+Explain: *"Paper is the live design canvas Rubin draws on — menus, posts, stories appear in your Paper document as he builds them. It runs as a small local server from the Paper Desktop app, and it's already declared in the plugin — so there's nothing to configure by hand."*
 
-## Step 7: Confirm Capabilities Are Loaded
+If they'll do design work, walk them through it:
+1. Install the **Paper Desktop app** and **open any file** (this auto-starts its local MCP server on `127.0.0.1:29979`).
+2. The plugin already points at that server, so Claude Code will connect on its own — just **approve it** if prompted.
+3. Verify: run `/mcp` (you should see `paper`), then test by asking *"create a red rectangle in Paper"* — a rectangle should appear in the document.
 
-- **Skills**: `bukito-brand`, `bukito-content`, `bukito-ugc` (auto-trigger on relevant requests; `bukito-brand` is preloaded into both agents).
-- **Agents**: `rubin` and `helena` are available for delegation — no manual loading needed. Claude routes design tasks to Rubin and marketing tasks to Helena automatically.
+If Paper shows as disconnected, it just means the Desktop app isn't running yet — open a file and it'll connect.
 
-## Step 8: Ready
+If they're marketing-only, say it's optional and note Rubin can still produce HTML templates and Remotion videos without it.
 
-Say:
+## Step 6 — Optional power tools
+
+Briefly mention, and only set up if relevant:
+- **Magic MCP (21st.dev)** — Rubin searches high-quality React components before building from scratch (`TWENTYFIRST_API_KEY`).
+- **Remotion** — programmatic branded video, in `$BUKITO_PROJECTS_DIR/bukito-video/`.
+- **Runway** — AI cinematic clips from stills (`RUNWAY_API_KEY`).
+- **Postiz** — schedules/publishes posts, runs locally via Docker (`POSTIZ_API_KEY`).
+
+## Step 7 — Show them the shared brain
+
+Explain: *"As Rubin and Helena learn what works — a winning caption pattern, a design-system decision — those learnings don't stay on your laptop. They go into `brain/rubin.md` and `brain/helena.md` in GitHub, reviewed via pull request, so the whole team benefits. You're not training a private copy; you're contributing to a shared one."*
+
+## Step 8 — Ready
+
+Summarize what's connected vs optional-and-skipped, then:
 
 ```
 ┌──────────────────────────────────────────┐
-│  ✓ ALL SYSTEMS GO                        │
+│  ✓ YOU'RE SET UP                         │
 │                                          │
-│  Connected:                              │
-│    [✓/✗] Supabase (brand assets + data)  │
-│    ✓ Brand kit (Kisrre + colors + logos)  │
-│    [✓/✗] Paper (design canvas)           │
-│    [✓/✗] Magic / Remotion / Runway       │
-│    [✓/✗] Postiz (auto-posting)           │
+│  Try saying:                             │
+│    "Ask Rubin to design this week's      │
+│       menu highlight post"               │
+│    "Ask Helena to plan next week's       │
+│       content calendar"                  │
+│    "Make a Bukito story for tonight's    │
+│       live music"                        │
 │                                          │
-│  Say:                                    │
-│    "Ask Rubin to..." — design tasks      │
-│    "Ask Helena to..." — marketing tasks  │
-│    "Make bukito content" — quick post    │
-│    "Plan next week" — content calendar   │
-│                                          │
-│  🔥 Let's build.                         │
+│  🔥 Welcome to the studio. Let's build.  │
 └──────────────────────────────────────────┘
 ```
 
-## Important Notes
+End by inviting their first real task, tailored to the role they chose in Step 1.
 
-- **Rubin and Helena are subagents** — each runs in its own context with persistent project memory. They cannot invoke each other directly; for collaborative (public-facing) work, each hands the task back to the main session so the other can be brought in. Brand enforcement is automatic — `bukito-brand` is preloaded into both.
-- Photos are at `$BUKITO_ASSETS_DIR/photos/` and in Supabase Storage.
-- The Golden Standard LUT is at `$BUKITO_ASSETS_DIR/lut/BUKITO_GoldenStandard.cube` for Lightroom/Resolve.
-- Never print or store secret values (API keys, tokens) — use environment variables.
+## Guardrails
+
+- Rubin and Helena are **subagents** with their own context; for public-facing work each hands back to the main session so the other can review. Brand enforcement is automatic (`bukito-brand` is preloaded into both).
+- Never print or store secret values. Never write secrets into the shared brain.
+- If a step fails, explain it plainly and offer the smallest next action — don't make them feel stuck.
