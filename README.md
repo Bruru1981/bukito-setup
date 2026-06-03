@@ -89,6 +89,35 @@ Visual assets (logos, fonts, icons, photos, LUT) live in a **separate** repo, `b
 
 ---
 
+## Working as a team — GitHub is the source of truth
+
+This repo **is** the studio's shared brain. The agents' personalities, Rubin's role, Helena's vision, the brand rules — they all live in version-controlled files here, and everyone installs them *from* this repo via the marketplace. So changes flow through GitHub, not through individual machines.
+
+**To evolve an agent or skill** (e.g. you or an analyst want to change Helena's vision or redraw Rubin's remit):
+
+```bash
+git checkout -b update-helena-vision
+# edit agents/helena.md  (or agents/rubin.md, skills/*/SKILL.md)
+git commit -am "Refine Helena's vision: ..."
+git push -u origin update-helena-vision
+# open a PR → review → merge to main
+```
+
+CI (`.github/workflows/validate.yml`) checks every PR: JSON manifests are valid, `install.sh` parses and passes shellcheck, and every skill/agent has the required frontmatter. Merge only when it's green.
+
+**To pull everyone else's changes** after a merge:
+
+```text
+/plugin marketplace update bukito-studio
+/plugin update bukito
+```
+
+Because the definitions are versioned, every change to who Rubin and Helena are is reviewable, reversible (`git revert`), and has a full history (`git log agents/helena.md`).
+
+> **Note on agent memory.** The agents are currently configured with `memory: project`, which is fast but stored **locally per machine** — those runtime learnings do **not** sync through GitHub. Only the versioned files above are the shared brain. See the open decision in the PR if you want learnings to sync through GitHub too.
+
+---
+
 ## Repository layout
 
 ```
