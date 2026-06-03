@@ -66,9 +66,9 @@ Set these in your shell profile (or Claude Code env). Defaults are used when uns
 
 `.mcp.json` declares the MCP servers the studio uses. On first use Claude Code asks you to approve project-scoped servers.
 
+- **paper** (design canvas) — Rubin's live canvas. Bundled; it points at the Paper Desktop app's local server (`http://127.0.0.1:29979/mcp`). Just install Paper Desktop and open a file, and Claude Code connects automatically (approve when prompted). Shows as disconnected when the Desktop app isn't running.
 - **supabase** — content analytics, content calendar, media library. Needs `SUPABASE_ACCESS_TOKEN`.
 - **magic** (21st.dev) — React component search/inspiration for Rubin. Needs `TWENTYFIRST_API_KEY`.
-- **Paper** (design canvas) — **configure manually**; add your Paper MCP server to `.mcp.json` or your user config (it isn't bundled because its endpoint is account-specific).
 
 > The package names/args in `.mcp.json` are sensible defaults — adjust them to match the exact MCP servers you use.
 
